@@ -1,16 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useQuery } from '@tanstack/react-query';
 import { hierarchyApi, questionsApi, statsApi } from '@/lib/api';
 import { Loader2, Download, FileText, TrendingUp, BarChart3 } from 'lucide-react';
-import { QuestionDistributionChart } from '@/components/analytics/QuestionDistributionChart';
-import { DifficultyDistributionChart } from '@/components/analytics/DifficultyDistributionChart';
+import { 
+  QuestionDistributionChart, 
+  DifficultyDistributionChart, 
+  ParameterAnalysis 
+} from '@/components/analytics/ClientOnlyChart';
 import { ContentCoverageTable } from '@/components/analytics/ContentCoverageTable';
-import { ParameterAnalysis } from '@/components/analytics/ParameterAnalysis';
 import { QuickInsights } from '@/components/analytics/QuickInsights';
 
 export default function AnalyticsPage() {
@@ -164,8 +167,8 @@ export default function AnalyticsPage() {
   const totalExams = exams?.length || 0;
   const avgQuestionsPerExam = totalExams > 0 ? Math.round(totalQuestions / totalExams) : 0;
   const avgCoverage = analyticsData.coverage.length > 0
-    ? Math.round(analyticsData.coverage.reduce((sum, c) => sum + c.coverage, 0) / analyticsData.coverage.length)
-    : 0;
+  ? Math.round(analyticsData.coverage.reduce((sum: number, c: any) => sum + c.coverage, 0) / analyticsData.coverage.length)
+  : 0;
 
   return (
     <AppLayout
@@ -264,9 +267,9 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6">
         <QuestionDistributionChart data={analyticsData.examDistribution} />
         <DifficultyDistributionChart 
-          easy={analyticsData.difficulty.easy}
-          medium={analyticsData.difficulty.medium}
-          hard={analyticsData.difficulty.hard}
+          easyCount={analyticsData.difficulty.easy}
+          mediumCount={analyticsData.difficulty.medium}
+          hardCount={analyticsData.difficulty.hard}
         />
       </div>
 

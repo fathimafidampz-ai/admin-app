@@ -1,31 +1,72 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useQuery } from '@tanstack/react-query';
-import { statsApi } from '@/lib/api';
 import { StatCard } from '@/components/dashboard/StatCard';
+import { QuickActions } from '@/components/dashboard/QuickActions';
 import { HierarchyDistributionChart } from '@/components/dashboard/HierarchyDistributionChart';
 import { ExamTypeChart } from '@/components/dashboard/ExamTypeChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { QuickActions } from '@/components/dashboard/QuickActions';
-import { 
-  BarChart3, 
-  Users, 
-  FileText, 
+import { useQuery } from '@tanstack/react-query';
+import { statsApi } from '@/lib/api';
+import {
+  FileText,
+  BarChart3,
   TrendingUp,
-  Loader2 
+  Users,
+  Loader2
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [userName, setUserName] = useState('User');
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  // ✅ CHECK AUTHENTICATION & GET USER
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    // Get user from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setUserName(user.name || 'User');
+      } catch (error) {
+        console.error('Error parsing user:', error);
+      }
+    }
+
+    setIsAuthChecking(false);
+  }, [router]);
+
   const { data: stats, isLoading } = useQuery({
     queryKey: ['statistics'],
     queryFn: statsApi.getStatistics,
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
+  // Show loading while checking auth
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <Loader2 className="w-12 h-12 animate-spin text-primary-500" />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <AppLayout title="Dashboard" subtitle="Welcome back! Here's what's happening">
+      <AppLayout 
+        title={`Welcome back, ${userName}!`}
+        subtitle="Here's what's happening with your content today"
+      >
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-12 h-12 animate-spin text-primary-500" />
         </div>
@@ -69,7 +110,10 @@ export default function DashboardPage() {
   ];
 
   return (
-    <AppLayout title="Dashboard" subtitle="Welcome back! Here's what's happening">
+    <AppLayout 
+      title={`Welcome back, ${userName}!`}
+      subtitle="Here's what's happening with your content today"
+    >
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((stat, index) => (

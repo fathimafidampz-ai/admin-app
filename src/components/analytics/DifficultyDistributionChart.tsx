@@ -1,33 +1,42 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface DifficultyDistributionChartProps {
-  easy: number;
-  medium: number;
-  hard: number;
+  easyCount: number;
+  mediumCount: number;
+  hardCount: number;
 }
 
-const COLORS = {
-  easy: '#10b981',
-  medium: '#f59e0b',
-  hard: '#ef4444',
-};
-
-export function DifficultyDistributionChart({ easy, medium, hard }: DifficultyDistributionChartProps) {
+export function DifficultyDistributionChart({ 
+  easyCount, 
+  mediumCount, 
+  hardCount 
+}: DifficultyDistributionChartProps) {
+  const total = easyCount + mediumCount + hardCount;
+  
   const data = [
-    { name: 'Easy', value: easy, color: COLORS.easy },
-    { name: 'Medium', value: medium, color: COLORS.medium },
-    { name: 'Hard', value: hard, color: COLORS.hard },
-  ];
+    { name: 'Easy', value: easyCount, color: '#10b981' },
+    { name: 'Medium', value: mediumCount, color: '#f59e0b' },
+    { name: 'Hard', value: hardCount, color: '#ef4444' },
+  ].filter(item => item.value > 0);
 
-  const total = easy + medium + hard;
-
-  const renderLabel = (entry: any) => {
-    const percent = total > 0 ? ((entry.value / total) * 100).toFixed(0) : 0;
-    return `${entry.name}: ${percent}%`;
-  };
+  if (total === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Difficulty Distribution</CardTitle>
+          <CardDescription>Questions by difficulty level</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+            No questions to display
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -36,21 +45,15 @@ export function DifficultyDistributionChart({ easy, medium, hard }: DifficultyDi
         <CardDescription>Questions by difficulty level</CardDescription>
       </CardHeader>
       <CardContent>
-        {total === 0 ? (
-          <div className="h-[300px] flex items-center justify-center text-gray-500">
-            No questions available
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
+        {/* Pie Chart */}
+        <div style={{ width: '100%', height: '320px' }}>
+          <ResponsiveContainer>
             <PieChart>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={renderLabel}
                 outerRadius={100}
-                fill="#8884d8"
                 dataKey="value"
               >
                 {data.map((entry, index) => (
@@ -58,33 +61,53 @@ export function DifficultyDistributionChart({ easy, medium, hard }: DifficultyDi
                 ))}
               </Pie>
               <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  padding: '8px'
+                contentStyle={{
+                  backgroundColor: 'rgb(31 41 55)',
+                  border: '1px solid rgb(55 65 81)',
+                  borderRadius: '0.5rem',
+                  color: 'white'
                 }}
               />
-              <Legend />
+              <Legend 
+                verticalAlign="bottom"
+                iconType="circle"
+              />
             </PieChart>
           </ResponsiveContainer>
-        )}
+        </div>
 
-        {/* Stats */}
-          <div className="grid grid-cols-3 gap-3 mt-6">
-            <div className="p-4 bg-gradient-to-br from-green-400 to-green-600 dark:from-green-500 dark:to-green-700 border-2 border-green-500 dark:border-green-600 rounded-xl text-center shadow-lg hover:shadow-xl transition-all">
-              <p className="text-3xl font-bold text-white drop-shadow-md">{easy}</p>
-              <p className="text-sm font-semibold text-green-50 dark:text-green-100">Easy</p>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-yellow-400 to-orange-500 dark:from-yellow-500 dark:to-orange-600 border-2 border-orange-500 dark:border-orange-600 rounded-xl text-center shadow-lg hover:shadow-xl transition-all">
-              <p className="text-3xl font-bold text-white drop-shadow-md">{medium}</p>
-              <p className="text-sm font-semibold text-orange-50 dark:text-orange-100">Medium</p>
-            </div>
-            <div className="p-4 bg-gradient-to-br from-red-500 to-red-700 dark:from-red-600 dark:to-red-800 border-2 border-red-600 dark:border-red-700 rounded-xl text-center shadow-lg hover:shadow-xl transition-all">
-              <p className="text-3xl font-bold text-white drop-shadow-md">{hard}</p>
-              <p className="text-sm font-semibold text-red-50 dark:text-red-100">Hard</p>
-            </div>
+        {/* 🎨 BRIGHT GRADIENT CARDS */}
+        <div className="grid grid-cols-3 gap-3 mt-6">
+          {/* Easy Card - Bright Green Gradient */}
+          <div className="rounded-lg bg-gradient-to-br from-green-400 to-green-600 dark:from-green-500 dark:to-green-700 p-4 text-white shadow-md hover:shadow-lg transition-all text-center">
+            <p className="text-xs font-semibold mb-1.5 opacity-95">
+              Easy
+            </p>
+            <p className="text-3xl font-bold">
+              {easyCount}
+            </p>
           </div>
+          
+          {/* Medium Card - Bright Orange Gradient */}
+          <div className="rounded-lg bg-gradient-to-br from-amber-400 to-orange-600 dark:from-amber-500 dark:to-orange-700 p-4 text-white shadow-md hover:shadow-lg transition-all text-center">
+            <p className="text-xs font-semibold mb-1.5 opacity-95">
+              Medium
+            </p>
+            <p className="text-3xl font-bold">
+              {mediumCount}
+            </p>
+          </div>
+          
+          {/* Hard Card - Bright Red Gradient */}
+          <div className="rounded-lg bg-gradient-to-br from-rose-400 to-red-600 dark:from-rose-500 dark:to-red-700 p-4 text-white shadow-md hover:shadow-lg transition-all text-center">
+            <p className="text-xs font-semibold mb-1.5 opacity-95">
+              Hard
+            </p>
+            <p className="text-3xl font-bold">
+              {hardCount}
+            </p>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

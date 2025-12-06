@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -44,14 +45,14 @@ function HierarchyBreadcrumb({
             className={cn(
               "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
               index === path.length - 1
-                ? "bg-primary-100 text-primary-700"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             )}
           >
             <span className="capitalize">{level.type}</span>: {level.name}
           </button>
           {index < path.length - 1 && (
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-gray-400 dark:text-gray-500" />
           )}
         </div>
       ))}
@@ -60,6 +61,16 @@ function HierarchyBreadcrumb({
 }
 
 export default function HierarchyPage() {
+  const router = useRouter();
+
+  // ✅ CHECK AUTHENTICATION
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      router.push('/login');
+    }
+  }, [router]);
+
   const [viewMode, setViewMode] = useState<ViewMode>('create');
   const [currentPath, setCurrentPath] = useState<HierarchyLevel[]>([]);
   const [examType, setExamType] = useState<'competitive' | 'school' | null>(null);
@@ -286,8 +297,8 @@ export default function HierarchyPage() {
           <Card className="mb-6">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary-100">
-                  <Network className="w-5 h-5 text-primary-600" />
+                <div className="p-2 rounded-lg bg-primary-100 dark:bg-primary-900/30">
+                  <Network className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                 </div>
                 <div>
                   <CardTitle>Navigate Hierarchy</CardTitle>

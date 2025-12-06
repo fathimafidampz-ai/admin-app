@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { GraduationCap, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { authApi } from '@/lib/api';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -23,27 +24,40 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  e.preventDefault();
+  setError('');
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+  // Validation
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match');
+    return;
+  }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
+  if (formData.password.length < 6) {
+    setError('Password must be at least 6 characters');
+    return;
+  }
 
-    setIsLoading(true);
+  setIsLoading(true);
 
-    // Mock registration - In real app, this would call your API
-    setTimeout(() => {
-      router.push('/login');
-    }, 1000);
-  };
+  try {
+    await authApi.signUp({
+      email: formData.email,
+      password: formData.password,
+      name: formData.name,
+      organization: formData.organization,
+    });
+
+    // Success - redirect to login
+    router.push('/login?registered=true');
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || 
+                        error.response?.data?.message || 
+                        'Registration failed. Please try again.';
+    setError(errorMessage);
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">

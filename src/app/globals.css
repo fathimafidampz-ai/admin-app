@@ -109,3 +109,160 @@ select option {
   animation: fade-in 0.5s ease-out forwards;
 }
 
+/* Dropdown/Select styling for dark mode */
+select {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600;
+}
+
+select:focus {
+  @apply border-primary-500 dark:border-primary-400 ring-2 ring-primary-200 dark:ring-primary-800;
+}
+
+select:disabled {
+  @apply bg-gray-100 dark:bg-gray-900 cursor-not-allowed opacity-50;
+}
+
+/* Option elements in select */
+select option {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+
+/* Disabled select dropdown */
+select:disabled {
+  @apply bg-gray-50 dark:bg-gray-900;
+}
+
+
+/* ============================================
+   DARK MODE FORM FIXES - Universal
+   ============================================ */
+
+/* All input fields */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="url"],
+input[type="tel"],
+input[type="search"],
+textarea {
+  @apply bg-white dark:bg-gray-800;
+  @apply text-gray-900 dark:text-gray-100;
+  @apply border-gray-300 dark:border-gray-600;
+  @apply placeholder-gray-400 dark:placeholder-gray-500;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="url"]:focus,
+input[type="tel"]:focus,
+input[type="search"]:focus,
+textarea:focus {
+  @apply border-primary-500 dark:border-primary-400;
+  @apply ring-2 ring-primary-200 dark:ring-primary-800;
+}
+
+input:disabled,
+textarea:disabled {
+  @apply bg-gray-50 dark:bg-gray-900;
+  @apply cursor-not-allowed opacity-50;
+}
+
+/* Radio buttons and checkboxes */
+input[type="radio"],
+input[type="checkbox"] {
+  @apply border-gray-300 dark:border-gray-600;
+  @apply bg-white dark:bg-gray-800;
+}
+
+input[type="radio"]:checked,
+input[type="checkbox"]:checked {
+  @apply bg-primary-600 dark:bg-primary-500;
+  @apply border-primary-600 dark:border-primary-500;
+}
+
+/* Image upload boxes with dashed borders */
+.border-dashed {
+  @apply bg-white dark:bg-gray-800/30;
+  @apply border-gray-300 dark:border-gray-600;
+}
+
+.border-dashed:hover {
+  @apply bg-gray-50 dark:bg-gray-800/50;
+  @apply border-primary-400 dark:border-primary-500;
+}
+
+/* Helper text and labels */
+.text-gray-500 {
+  @apply dark:text-gray-400;
+}
+
+.text-gray-600 {
+  @apply dark:text-gray-400;
+}
+
+.text-gray-700 {
+  @apply dark:text-gray-300;
+}
+
+/* Info boxes (like the 3PL parameter hint) */
+.bg-blue-50 {
+  @apply dark:bg-blue-900/20;
+}
+
+.border-blue-200 {
+  @apply dark:border-blue-700;
+}
+
+.text-blue-800 {
+  @apply dark:text-blue-200;
+}
+
+.text-blue-700 {
+  @apply dark:text-blue-300;
+}
+
+.text-blue-900 {
+  @apply dark:text-blue-100;
+}
+
+/* Success/Green info boxes */
+.bg-green-50 {
+  @apply dark:bg-green-900/20;
+}
+
+.border-green-200 {
+  @apply dark:border-green-700;
+}
+
+.text-green-800 {
+  @apply dark:text-green-200;
+}
+
+/* Warning/Yellow info boxes */
+.bg-yellow-50 {
+  @apply dark:bg-yellow-900/20;
+}
+
+.border-yellow-200 {
+  @apply dark:border-yellow-700;
+}
+
+.text-yellow-800 {
+  @apply dark:text-yellow-200;
+}
+
+/* Error/Red info boxes */
+.bg-red-50 {
+  @apply dark:bg-red-900/20;
+}
+
+.border-red-200 {
+  @apply dark:border-red-700;
+}
+
+.text-red-800 {
+  @apply dark:text-red-200;
+}

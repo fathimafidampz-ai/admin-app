@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -73,8 +74,8 @@ function QuestionStats({
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                 </div>
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} shadow-lg`}>
                   <Icon className="w-6 h-6 text-white" />
@@ -89,6 +90,16 @@ function QuestionStats({
 }
 
 export default function BrowsePage() {
+  const router = useRouter();
+
+  // ✅ CHECK AUTHENTICATION
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      router.push('/login');
+    }
+  }, [router]);
+
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     examId: '',
@@ -110,16 +121,24 @@ export default function BrowsePage() {
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['questions', filters.conceptId],
-    queryFn: () => questionsApi.getAll(filters.conceptId || undefined),
-    refetchInterval: 10000,
+    queryFn: () => questionsApi.getAll(
+      filters.conceptId 
+        ? { concept_id: filters.conceptId } 
+        : undefined
+    ),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => questionsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
+      setDeletingQuestion(null); // ✅ Close the dialog
       alert('Question deleted successfully!');
-      setDeletingQuestion(null);
+    },
+    onError: (error) => {
+      console.error('Delete error:', error);
+      alert('Failed to delete question. Please try again.');
+      setDeletingQuestion(null); // ✅ Close dialog even on error
     },
   });
 
@@ -131,6 +150,11 @@ export default function BrowsePage() {
       queryClient.invalidateQueries({ queryKey: ['questions'] });
       alert(`${selectedQuestions.size} questions deleted successfully!`);
       setSelectedQuestions(new Set());
+      setShowBulkDelete(false);
+    },
+    onError: (error) => {
+      console.error('Bulk delete error:', error);
+      alert('Failed to delete questions. Please try again.');
       setShowBulkDelete(false);
     },
   });
@@ -253,7 +277,7 @@ export default function BrowsePage() {
           </Button>
 
           {selectedQuestions.size > 0 && (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               {selectedQuestions.size} of {filteredQuestions.length} questions selected
             </p>
           )}
@@ -270,8 +294,8 @@ export default function BrowsePage() {
         </div>
       ) : filteredQuestions.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No questions found</p>
-          <p className="text-gray-400 text-sm mt-2">Try adjusting your filters or create a new question</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No questions found</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">Try adjusting your filters or create a new question</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -319,7 +343,9 @@ export default function BrowsePage() {
       {deletingQuestion && (
         <DeleteConfirmDialog
           questionContent={deletingQuestion.content}
-          onConfirm={() => deleteMutation.mutate(deletingQuestion.id)}
+          onConfirm={() => {
+            deleteMutation.mutate(deletingQuestion.id);
+          }}
           onCancel={() => setDeletingQuestion(null)}
           isDeleting={deleteMutation.isPending}
         />

@@ -1,62 +1,79 @@
-export const NAVIGATION_ITEMS = [
+import { 
+  LayoutDashboard, 
+  Network, 
+  Upload, 
+  FileStack, 
+  FolderOpen, 
+  Search, 
+  BarChart3, 
+  Tags, 
+  Settings,
+  type LucideIcon
+} from 'lucide-react';
+
+interface NavigationItem {
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  description: string;
+}
+
+export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
-    id: 'dashboard',
     label: 'Dashboard',
     path: '/dashboard',
-    icon: 'LayoutDashboard',
+    icon: LayoutDashboard,
     description: 'Overview and statistics',
   },
   {
-    id: 'hierarchy',
     label: 'Create Hierarchy',
     path: '/hierarchy',
-    icon: 'Network',
+    icon: Network,
     description: 'Build content structure',
   },
   {
-    id: 'questions',
     label: 'Upload Questions',
-    path: '/questions',
-    icon: 'FileQuestion',
+    path: '/upload',
+    icon: Upload,
     description: 'Add bank questions',
   },
   {
-    id: 'pyq',  // Add this entire block
     label: 'Manage PYQ',
     path: '/pyq',
-    icon: 'FileText',
+    icon: FileStack,
     description: 'Previous year questions',
   },
   {
-    id: 'resources',
     label: 'Upload Resources',
     path: '/resources',
-    icon: 'FolderOpen',
+    icon: FolderOpen,
     description: 'Learning materials',
   },
   {
-    id: 'browse',
     label: 'Browse Questions',
     path: '/browse',
-    icon: 'Search',
+    icon: Search,
     description: 'View Q-matrix',
   },
-
   {
-    id: 'analytics',  // ADD THIS
     label: 'Analytics',
     path: '/analytics',
-    icon: 'BarChart3',
+    icon: BarChart3,
     description: 'Insights & metrics',
   },
   {
-    id: 'tags',  // ADD THIS
     label: 'Tags & Search',
     path: '/tags',
-    icon: 'Tag',
+    icon: Tags,
     description: 'Manage tags & filters',
   },
-]; 
+  {
+    label: 'Settings',
+    path: '/settings',
+    icon: Settings,
+    description: 'App preferences',
+  },
+];
 
 export const EXAM_TYPES = [
   { 

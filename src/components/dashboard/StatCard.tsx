@@ -8,9 +8,9 @@ interface StatCardProps {
   value: string | number;
   icon: LucideIcon;
   change?: string;
-  changeType?: 'increase' | 'decrease';
+  changeType?: 'increase' | 'decrease' | 'positive' | 'negative';
   color?: string;
-  delay?: number;
+  delay?: number; // ← Make sure this has the ? to be optional
 }
 
 export function StatCard({
@@ -20,12 +20,10 @@ export function StatCard({
   change,
   changeType,
   color = 'from-primary-500 to-primary-700',
-  delay = 0,
+  delay = 0, // ← Add default value
 }: StatCardProps) {
   return (
-    <Card 
-      className="hover:shadow-lg transition-all duration-300 animate-fade-in"
-    >
+    <Card className="hover:shadow-lg transition-all duration-300 animate-fade-in">
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div>
@@ -33,7 +31,7 @@ export function StatCard({
             <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>
             {change && (
               <p className={`text-sm mt-1 ${
-                changeType === 'increase' 
+                changeType === 'increase' || changeType === 'positive'
                   ? 'text-success-600 dark:text-success-400' 
                   : 'text-error-600 dark:text-error-400'
               }`}>

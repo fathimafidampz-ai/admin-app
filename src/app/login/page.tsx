@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -18,22 +18,54 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setIsLoading(true);
+  // ✅ CHECK IF ALREADY LOGGED IN
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      router.push('/dashboard');
+    }
+  }, [router]);
 
-    // Mock login - In real app, this would call your API
-    setTimeout(() => {
-      if (formData.email && formData.password) {
-        // Success - redirect to dashboard
-        router.push('/dashboard');
-      } else {
-        setError('Please fill in all fields');
-        setIsLoading(false);
-      }
-    }, 1000);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
+  setIsLoading(true);
+
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  try {
+    if (formData.email && formData.password) {
+      // Extract name from email (better formatting)
+      const emailUsername = formData.email.split('@')[0];
+      const formattedName = emailUsername
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      const mockUser = {
+        id: 'user-' + Date.now(),
+        email: formData.email,
+        name: formattedName,
+        organization: 'ZYRA EduTech',
+        role: 'Admin'
+      };
+      
+      localStorage.setItem('auth_token', 'mock-token-' + Date.now());
+      localStorage.setItem('user', JSON.stringify(mockUser));
+      
+      console.log('✅ Login successful:', mockUser);
+      router.push('/dashboard');
+    } else {
+      setError('Please enter email and password');
+      setIsLoading(false);
+    }
+  } catch (error: any) {
+    setError('Login failed. Please try again.');
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
@@ -131,16 +163,13 @@ export default function LoginPage() {
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
 
-              {/* Demo Credentials */}
+              {/* Demo Info */}
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                 <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                  Demo Credentials:
+                  💡 Mock Login Active
                 </p>
                 <p className="text-xs text-blue-700 dark:text-blue-300">
-                  Email: admin@edutech.com
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  Password: demo123
+                  Login with any email and password to test the app
                 </p>
               </div>
 
