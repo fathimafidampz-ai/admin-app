@@ -447,36 +447,42 @@ export const hierarchyApi = {
   },
 
   // Get subjects
-  getSubjects: async (examId?: string) => {
-    if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const allSubjects: any[] = [];
-      
-      MOCK_HIERARCHY_TREE.forEach(exam => {
-        if (!examId || exam.id === examId) {
-          // Get subjects directly under exam (competitive)
-          if (exam.subjects) {
-            allSubjects.push(...exam.subjects);
-          }
-          // Get subjects under classes (school)
-          if (exam.classes) {
-            exam.classes.forEach((cls: any) => {
-              if (cls.subjects) {
-                allSubjects.push(...cls.subjects);
-              }
-            });
-          }
+  // Get subjects
+getSubjects: async (examId?: string, classId?: string) => {
+  if (USE_MOCK_API) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const allSubjects: any[] = [];
+    
+    MOCK_HIERARCHY_TREE.forEach(exam => {
+      if (!examId || exam.id === examId) {
+        // Get subjects directly under exam (competitive)
+        if (exam.subjects && !classId) {
+          allSubjects.push(...exam.subjects);
         }
-      });
-      
-      return allSubjects;
-    }
+        // Get subjects under classes (school)
+        if (exam.classes) {
+          exam.classes.forEach((cls: any) => {
+            if ((!classId || cls.id === classId) && cls.subjects) {
+              allSubjects.push(...cls.subjects);
+            }
+          });
+        }
+      }
+    });
+    
+    return allSubjects;
+  }
 
-    const url = examId ? `/subjects?exam_id=${examId}` : '/subjects';
-    const response = await api.get(url);
-    return response.data;
-  },
+  let url = '/subjects';
+  const params: string[] = [];
+  if (examId) params.push(`exam_id=${examId}`);
+  if (classId) params.push(`class_id=${classId}`);
+  if (params.length > 0) url += `?${params.join('&')}`;
+  
+  const response = await api.get(url);
+  return response.data;
+},
 
   // Create subject
   createSubject: async (subject: any) => {
