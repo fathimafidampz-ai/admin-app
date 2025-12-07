@@ -75,24 +75,19 @@ export default function ResourcesPage() {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: (data: { file?: File; metadata: any }) => {
-      if (data.file) {
-        return resourcesApi.upload(data.file, data.metadata);
-      } else {
-        // For external links, create resource without file
-        return resourcesApi.createLink(data.metadata);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['resources'] });
-      resetForm();
-      alert('Resource added successfully!');
-    },
-    onError: (error) => {
-      console.error('Upload error:', error);
-      alert('Failed to add resource. Please try again.');
-    },
-  });
+  mutationFn: (data: { file?: File; metadata: any }) => {
+    return resourcesApi.upload(data.file || null, data.metadata);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['resources'] });
+    resetForm();
+    alert('Resource added successfully!');
+  },
+  onError: (error) => {
+    console.error('Upload error:', error);
+    alert('Failed to add resource. Please try again.');
+  },
+});
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => resourcesApi.delete(id),

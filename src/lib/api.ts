@@ -372,16 +372,16 @@ export const hierarchyApi = {
       };
       MOCK_EXAMS.push(newExam);
       
-      // Also add to hierarchy tree
       const hierarchyExam: any = {
         ...newExam,
       };
       
-      // ✅ Add subjects or classes based on exam type
       if (exam.exam_type === 'school') {
         hierarchyExam.classes = [];
+        hierarchyExam.subjects = undefined;
       } else {
         hierarchyExam.subjects = [];
+        hierarchyExam.classes = undefined;
       }
       
       MOCK_HIERARCHY_TREE.push(hierarchyExam);
@@ -391,6 +391,34 @@ export const hierarchyApi = {
     }
 
     const response = await api.post('/exams', exam);
+    return response.data;
+  },
+
+  // ✅ Create Class (for school exams)
+  createClass: async (classData: any) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newClass = {
+        ...classData,
+        id: 'cl' + Date.now(),
+        created_at: new Date().toISOString(),
+        subjects: []
+      };
+
+      // Add to the correct exam in hierarchy tree
+      const exam: any = MOCK_HIERARCHY_TREE.find(e => e.id === classData.exam_id);
+      if (exam) {
+        if (!exam.classes) {
+          exam.classes = [];
+        }
+        exam.classes.push(newClass);
+      }
+
+      console.log('✅ Class created:', newClass);
+      return newClass;
+    }
+
+    const response = await api.post('/classes', classData);
     return response.data;
   },
 
@@ -427,47 +455,47 @@ export const hierarchyApi = {
   },
 
   // Create subject
-createSubject: async (subject: any) => {
-  if (USE_MOCK_API) {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const newSubject = {
-      ...subject,
-      id: 's' + Date.now(),
-      created_at: new Date().toISOString(),
-      chapters: []
-    };
+  createSubject: async (subject: any) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newSubject = {
+        ...subject,
+        id: 's' + Date.now(),
+        created_at: new Date().toISOString(),
+        chapters: []
+      };
 
-    // Add to the correct exam in hierarchy tree
-    const exam: any = MOCK_HIERARCHY_TREE.find(e => e.id === subject.exam_id);
-    if (exam) {
-      if (subject.class_id) {
-        // School exam - add to class
-        const classItem = exam.classes?.find((c: any) => c.id === subject.class_id);
-        if (classItem) {
-          if (!classItem.subjects) {
-            classItem.subjects = [];
+      // Add to the correct exam in hierarchy tree
+      const exam: any = MOCK_HIERARCHY_TREE.find(e => e.id === subject.exam_id);
+      if (exam) {
+        if (subject.class_id) {
+          // School exam - add to class
+          const classItem = exam.classes?.find((c: any) => c.id === subject.class_id);
+          if (classItem) {
+            if (!classItem.subjects) {
+              classItem.subjects = [];
+            }
+            classItem.subjects.push(newSubject);
           }
-          classItem.subjects.push(newSubject);
+        } else {
+          // Competitive exam - add directly to exam
+          if (!exam.subjects) {
+            exam.subjects = [];
+          }
+          exam.subjects.push(newSubject);
         }
-      } else {
-        // Competitive exam - add directly to exam
-        if (!exam.subjects) {
-          exam.subjects = [];
-        }
-        exam.subjects.push(newSubject);
       }
+
+      console.log('✅ Subject created:', newSubject);
+      console.log('📊 Updated hierarchy:', MOCK_HIERARCHY_TREE);
+      
+      return newSubject;
     }
 
-    console.log('✅ Subject created:', newSubject);
-    console.log('📊 Updated hierarchy:', MOCK_HIERARCHY_TREE);
-    
-    return newSubject;
-  }
-
-  const response = await api.post('/subjects', subject);
-  return response.data;
-},
+    const response = await api.post('/subjects', subject);
+    return response.data;
+  },
 
   updateSubject: async (id: string, updates: any) => {
     const response = await api.put(`/subjects/${id}`, updates);
@@ -847,50 +875,41 @@ export const resourcesApi = {
   getAll: async () => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      return []; // Return empty array for now in mock mode
+      return [];
     }
     const response = await api.get('/resources');
     return response.data;
   },
 
-  upload: async (file: File, metadata: any) => {
+  upload: async (file: File | null, metadata: any) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       return {
         id: Date.now().toString(),
         ...metadata,
-        file_url: URL.createObjectURL(file),
-        file_size: file.size,
+        file_url: file ? URL.createObjectURL(file) : undefined,
+        file_size: file?.size,
         created_at: new Date().toISOString(),
       };
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('metadata', JSON.stringify(metadata));
+    if (file) {
+      // Upload with file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('metadata', JSON.stringify(metadata));
 
-    const response = await api.post('/resources/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-
-    return response.data;
-  },
-
-  // ✅ Create resource with external link (no file upload)
-  createLink: async (metadata: any) => {
-    if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return {
-        id: Date.now().toString(),
-        ...metadata,
-        created_at: new Date().toISOString(),
-      };
+      const response = await api.post('/resources/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } else {
+      // Create resource without file (external link)
+      const response = await api.post('/resources', metadata);
+      return response.data;
     }
-
-    const response = await api.post('/resources/link', metadata);
-    return response.data;
   },
 
   delete: async (id: string) => {
