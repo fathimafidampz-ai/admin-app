@@ -8,10 +8,11 @@ import { hierarchyApi } from '@/lib/api';
 
 interface CreateClassFormProps {
   examId: string;
+  examName?: string; // ✅ Add this optional prop
   onSuccess?: () => void;
 }
 
-export function CreateClassForm({ examId, onSuccess }: CreateClassFormProps) {
+export function CreateClassForm({ examId, examName, onSuccess }: CreateClassFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     class_number: '',
@@ -52,6 +53,14 @@ export function CreateClassForm({ examId, onSuccess }: CreateClassFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {examName && (
+        <div className="mb-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+          <p className="text-sm text-primary-700 dark:text-primary-300">
+            Creating class for: <span className="font-semibold">{examName}</span>
+          </p>
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Class Name *
