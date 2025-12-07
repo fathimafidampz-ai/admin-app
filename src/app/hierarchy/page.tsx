@@ -199,7 +199,6 @@ export default function HierarchyPage() {
         return (
           <CreateClassForm
             examId={selectedExamId}
-            examName={currentPath[0]?.name || ''}
             onSuccess={handleClassCreated}
           />
         );
