@@ -845,11 +845,26 @@ export const uploadImage = async (file: File, type: string = 'question') => {
 
 export const resourcesApi = {
   getAll: async () => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return []; // Return empty array for now in mock mode
+    }
     const response = await api.get('/resources');
     return response.data;
   },
 
   upload: async (file: File, metadata: any) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return {
+        id: Date.now().toString(),
+        ...metadata,
+        file_url: URL.createObjectURL(file),
+        file_size: file.size,
+        created_at: new Date().toISOString(),
+      };
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('metadata', JSON.stringify(metadata));
@@ -863,7 +878,26 @@ export const resourcesApi = {
     return response.data;
   },
 
+  // ✅ Create resource with external link (no file upload)
+  createLink: async (metadata: any) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return {
+        id: Date.now().toString(),
+        ...metadata,
+        created_at: new Date().toISOString(),
+      };
+    }
+
+    const response = await api.post('/resources/link', metadata);
+    return response.data;
+  },
+
   delete: async (id: string) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return;
+    }
     await api.delete(`/resources/${id}`);
   },
 };

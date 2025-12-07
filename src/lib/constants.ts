@@ -20,6 +20,12 @@ interface NavigationItem {
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
   {
+    label: 'Analytics',
+    path: '/analytics',
+    icon: BarChart3,
+    description: 'Insights & metrics',
+  },
+  {
     label: 'Dashboard',
     path: '/dashboard',
     icon: LayoutDashboard,
@@ -55,12 +61,7 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
     icon: Search,
     description: 'View Q-matrix',
   },
-  {
-    label: 'Analytics',
-    path: '/analytics',
-    icon: BarChart3,
-    description: 'Insights & metrics',
-  },
+  
   {
     label: 'Tags & Search',
     path: '/tags',
