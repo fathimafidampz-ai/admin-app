@@ -263,6 +263,7 @@ const MOCK_HIERARCHY_TREE = [
         id: 'cl1',
         name: 'Class 10',
         exam_id: '3',
+        class_number: '10',
         created_at: new Date().toISOString(),
         subjects: [
           {
@@ -394,7 +395,7 @@ export const hierarchyApi = {
     return response.data;
   },
 
-  // ✅ Create Class (for school exams)
+  // Create Class (for school exams)
   createClass: async (classData: any) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -419,6 +420,29 @@ export const hierarchyApi = {
     }
 
     const response = await api.post('/classes', classData);
+    return response.data;
+  },
+
+  // ✅ Get Classes (for school exams)
+  getClasses: async (examId?: string) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const allClasses: any[] = [];
+      
+      MOCK_HIERARCHY_TREE.forEach(exam => {
+        if (!examId || exam.id === examId) {
+          if (exam.classes) {
+            allClasses.push(...exam.classes);
+          }
+        }
+      });
+      
+      return allClasses;
+    }
+
+    const url = examId ? `/classes?exam_id=${examId}` : '/classes';
+    const response = await api.get(url);
     return response.data;
   },
 
