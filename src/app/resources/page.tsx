@@ -590,26 +590,7 @@ export default function ResourcesPage() {
               </div>
             )}
 
-            {/* Concept */}
-            {selectedTopic && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {hierarchyPath.exam_type === 'school' ? '6' : '5'}. Select Concept *
-                </label>
-                <select
-                  value={selectedConcept}
-                  onChange={(e) => handleConceptChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Select concept...</option>
-                  {concepts?.map((concept: any) => (
-                    <option key={concept.id} value={concept.id}>
-                      {concept.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            
           </div>
         </CardContent>
       </Card>
