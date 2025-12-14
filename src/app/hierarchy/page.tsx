@@ -15,7 +15,9 @@ import {
   CreateChapterForm,
   CreateTopicForm,
   CreateConceptForm,
+  CreateAttributeForm,
   HierarchyTree
+  
 } from '@/components/hierarchy';
 
 type HierarchyLevel = {
@@ -250,15 +252,14 @@ export default function HierarchyPage() {
       );
     }
     
-    return (
-      <CreateConceptForm
-        topicId={selectedTopicId}
-        topicName={currentPath.find(p => p.type === 'topic')?.name || ''}
-        onSuccess={handleConceptCreated}
-      />
-    );
-  };
-
+     return (
+    <CreateAttributeForm
+      topicId={selectedTopicId}
+      topicName={currentPath.find(p => p.type === 'topic')?.name || ''}
+      onSuccess={handleConceptCreated}  // or rename to handleAttributeCreated
+    />
+  );
+};
   return (
     <AppLayout 
       title="Create Hierarchy" 

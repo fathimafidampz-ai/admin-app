@@ -1,5 +1,63 @@
 import axios from 'axios';
 
+
+interface Attribute {
+  id: string;
+  name: string;
+  description: string;
+  topic_id: string;
+  created_at: string;
+}
+
+interface Topic {
+  id: string;
+  name: string;
+  chapter_id: string;
+  order_index: number;
+  created_at: string;
+  concepts?: any[];  // Legacy field for backward compatibility
+  attributes?: Attribute[];
+}
+
+interface Chapter {
+  id: string;
+  name: string;
+  subject_id: string;
+  order_index: number;
+  created_at: string;
+  topics?: Topic[];
+}
+
+interface Subject {
+  id: string;
+  name: string;
+  exam_id?: string;
+  class_id?: string;
+  created_at: string;
+  chapters?: Chapter[];
+}
+
+interface Class {
+  id: string;
+  name: string;
+  class_number: string;
+  exam_id: string;
+  created_at: string;
+  subjects?: Subject[];
+}
+
+interface Exam {
+  id: string;
+  name: string;
+  exam_type: 'competitive' | 'school';
+  description?: string;
+  created_at: string;
+  subjects?: Subject[];
+  classes?: Class[];
+}
+
+
+
 // ✅ SET TO TRUE FOR MOCK MODE (Development without backend)
 const USE_MOCK_API = true;
 
@@ -147,19 +205,37 @@ const MOCK_HIERARCHY_TREE = [
                 chapter_id: 'c1',
                 order_index: 1,
                 created_at: new Date().toISOString(),
-                concepts: [
+                // ✅ CHANGED: concepts → attributes
+                attributes: [
                   { 
-                    id: 'con1', 
-                    name: 'First Law',
+                    id: 'attr1', 
+                    name: 'Force Calculation',
+                    description: 'Ability to calculate forces',
                     topic_id: 't1',
-                    order_index: 1,
                     created_at: new Date().toISOString()
                   },
                   { 
-                    id: 'con2', 
-                    name: 'Second Law',
+                    id: 'attr2', 
+                    name: 'Free Body Diagrams',
+                    description: 'Creating and analyzing diagrams',
                     topic_id: 't1',
-                    order_index: 2,
+                    created_at: new Date().toISOString()
+                  },
+                ],
+                // Keep concepts for backward compatibility
+                concepts: [
+                  { 
+                    id: 'attr1', 
+                    name: 'Force Calculation',
+                    description: 'Ability to calculate forces',
+                    topic_id: 't1',
+                    created_at: new Date().toISOString()
+                  },
+                  { 
+                    id: 'attr2', 
+                    name: 'Free Body Diagrams',
+                    description: 'Creating and analyzing diagrams',
+                    topic_id: 't1',
                     created_at: new Date().toISOString()
                   },
                 ]
@@ -195,12 +271,21 @@ const MOCK_HIERARCHY_TREE = [
                 chapter_id: 'c3',
                 order_index: 1,
                 created_at: new Date().toISOString(),
+                attributes: [
+                  { 
+                    id: 'attr3', 
+                    name: 'Solving Linear Equations',
+                    description: 'Ability to solve equations',
+                    topic_id: 't2',
+                    created_at: new Date().toISOString()
+                  },
+                ],
                 concepts: [
                   { 
-                    id: 'con3', 
-                    name: 'Basic Equations',
+                    id: 'attr3', 
+                    name: 'Solving Linear Equations',
+                    description: 'Ability to solve equations',
                     topic_id: 't2',
-                    order_index: 1,
                     created_at: new Date().toISOString()
                   },
                 ]
@@ -244,6 +329,7 @@ const MOCK_HIERARCHY_TREE = [
                 chapter_id: 'c4',
                 order_index: 1,
                 created_at: new Date().toISOString(),
+                attributes: [],
                 concepts: []
               }
             ]
@@ -682,73 +768,148 @@ getSubjects: async (examId?: string, classId?: string) => {
     await api.delete(`/topics/${id}`);
   },
 
-  // Get concepts
-  getConcepts: async (topicId?: string) => {
-    if (USE_MOCK_API) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const allConcepts: any[] = [];
-      
-      MOCK_HIERARCHY_TREE.forEach(exam => {
-        const subjects = [...(exam.subjects || [])];
-        exam.classes?.forEach((cls: any) => {
+  // Create concept
+  createConcept: async (concept: any) => {
+  if (USE_MOCK_API) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const newConcept: Attribute = {
+      id: 'attr' + Date.now(),
+      name: concept.name,
+      description: concept.description,
+      topic_id: concept.topic_id,
+      created_at: new Date().toISOString()
+    };
+
+    MOCK_HIERARCHY_TREE.forEach((exam: any) => {  // ✅ Change to (exam: any)
+      const subjects = [...(exam.subjects || [])];
+      if (exam.classes) {
+        exam.classes.forEach((cls: any) => {  // ✅ Add : any
           if (cls.subjects) subjects.push(...cls.subjects);
         });
-        
-        subjects.forEach(subj => {
-          subj.chapters?.forEach((chap: any) => {
-            chap.topics?.forEach((top: any) => {
-              if (!topicId || top.id === topicId) {
-                if (top.concepts) allConcepts.push(...top.concepts);
-              }
-            });
-          });
-        });
-      });
+      }
       
-      return allConcepts;
-    }
+      subjects.forEach((subj: any) => {  // ✅ Add : any
+        if (subj.chapters) {
+          subj.chapters.forEach((chap: any) => {  // ✅ Add : any
+            const topic = chap.topics?.find((t: any) => t.id === concept.topic_id);  // ✅ Add : any
+            if (topic) {
+              if (!topic.attributes) topic.attributes = [];
+              topic.attributes.push(newConcept);
+            }
+          });
+        }
+      });
+    });
 
-    const url = topicId ? `/concepts?topic_id=${topicId}` : '/concepts';
-    const response = await api.get(url);
+    console.log('✅ Concept/Attribute created:', newConcept);
+    return newConcept;
+  }
+
+  const response = await api.post('/concepts', concept);
+  return response.data;
+},
+
+
+  createAttributes: async (topicId: string, attributes: any[]) => {
+  if (USE_MOCK_API) {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const newAttributes: Attribute[] = attributes.map((attr: any, index: number) => ({
+      ...attr,
+      id: 'attr' + Date.now() + index,
+      topic_id: topicId,
+      created_at: new Date().toISOString()
+    }));
+
+    MOCK_HIERARCHY_TREE.forEach((exam: any) => {
+      const subjects: any[] = [...(exam.subjects || [])];
+      if (exam.classes) {
+        exam.classes.forEach((cls: any) => {
+          if (cls.subjects) subjects.push(...cls.subjects);
+        });
+      }
+      
+      subjects.forEach((subj: any) => {
+        if (subj.chapters) {
+          subj.chapters.forEach((chap: any) => {
+            const topic = chap.topics?.find((t: any) => t.id === topicId);
+            if (topic) {
+              if (!topic.attributes) topic.attributes = [];
+              topic.attributes.push(...newAttributes);
+            }
+          });
+        }
+      });
+    });
+
+    console.log('✅ Attributes created:', newAttributes);
+    return { attributes: newAttributes };
+  }
+
+  const response = await api.post(`/topics/${topicId}/attributes`, attributes);
+  return response.data;
+},
+
+  // ✅ ALREADY EXISTS - Make sure this is present
+ getAttributes: async (topicId?: string): Promise<Attribute[]> => {
+  if (USE_MOCK_API) {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const allAttributes: Attribute[] = [];
+    
+    MOCK_HIERARCHY_TREE.forEach((exam: any) => {  // ✅ Change to (exam: any)
+      const subjects = [...(exam.subjects || [])];
+      if (exam.classes) {
+        exam.classes.forEach((cls: any) => {  // ✅ Add : any
+          if (cls.subjects) subjects.push(...cls.subjects);
+        });
+      }
+      
+      subjects.forEach((subj: any) => {  // ✅ Add : any
+        if (subj.chapters) {
+          subj.chapters.forEach((chap: any) => {  // ✅ Add : any
+            if (chap.topics) {
+              chap.topics.forEach((top: any) => {  // ✅ Add : any
+                if (!topicId || top.id === topicId) {
+                  if (top.attributes) allAttributes.push(...top.attributes);
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+    
+    return allAttributes;
+  }
+
+  const url = topicId ? `/topics/${topicId}/attributes` : '/attributes';
+  const response = await api.get(url);
+  return response.data;
+},
+  // ✅ ALREADY EXISTS - Make sure this is present
+  
+
+  // ✅ ADD THIS: Get concepts (alias for getAttributes)
+  getConcepts: async (topicId?: string): Promise<Attribute[]> => {
+    return hierarchyApi.getAttributes(topicId);
+  },
+
+  updateAttribute: async (attributeId: string, updates: any) => {
+    if (USE_MOCK_API) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { ...updates, id: attributeId };
+    }
+    const response = await api.put(`/attributes/${attributeId}`, updates);
     return response.data;
   },
 
-  // Create concept
-  createConcept: async (concept: any) => {
+  deleteAttribute: async (attributeId: string) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newConcept = {
-        ...concept,
-        id: 'con' + Date.now(),
-        created_at: new Date().toISOString()
-      };
-
-      // Find and update the topic
-      MOCK_HIERARCHY_TREE.forEach(exam => {
-        const subjects = [...(exam.subjects || [])];
-        exam.classes?.forEach((cls: any) => {
-          if (cls.subjects) subjects.push(...cls.subjects);
-        });
-        
-        subjects.forEach(subj => {
-          subj.chapters?.forEach((chap: any) => {
-            const topic = chap.topics?.find((t: any) => t.id === concept.topic_id);
-            if (topic) {
-              if (!topic.concepts) topic.concepts = [];
-              topic.concepts.push(newConcept);
-            }
-          });
-        });
-      });
-
-      console.log('✅ Concept created:', newConcept);
-      return newConcept;
+      return;
     }
-
-    const response = await api.post('/concepts', concept);
-    return response.data;
+    await api.delete(`/attributes/${attributeId}`);
   },
 
   updateConcept: async (id: string, updates: any) => {
@@ -778,6 +939,9 @@ getSubjects: async (examId?: string, classId?: string) => {
     const response = await api.get(url);
     return response.data;
   },
+
+  
+
 };
 
 // ============================================
