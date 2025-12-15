@@ -971,12 +971,11 @@ export const questionsApi = {
     return response.data;
   },
 
-  // ✅ UPDATED: Single question creation matching API spec
+  // ✅ FIXED: Correct endpoint
   create: async (questionData: any) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // For mock, just create a simple question
       const newQuestion = {
         id: Date.now().toString(),
         ...questionData.question,
@@ -986,13 +985,8 @@ export const questionsApi = {
       return newQuestion;
     }
 
-    // Real API expects this structure:
-    // {
-    //   question: { content, options, correct_answer, ... },
-    //   selected_attributes: [{ attribute_id, value }],
-    //   create_new_attributes: []
-    // }
-    const response = await api.post('/questions/create', questionData);
+    // ✅ CORRECT ENDPOINT
+    const response = await api.post('/questions/create_question', questionData);
     return response.data;
   },
 
@@ -1024,7 +1018,7 @@ export const questionsApi = {
     await api.delete(`/questions/${id}`);
   },
 
-  // ✅ UPDATED: Bulk creation matching API spec
+  // ✅ FIXED: Correct endpoint
   bulkCreate: async (questionsData: any[]) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -1039,13 +1033,8 @@ export const questionsApi = {
       return newQuestions;
     }
 
-    // Real API expects array of objects with structure:
-    // [{
-    //   question: { content, options, correct_answer, ... },
-    //   selected_attributes: [{ attribute_id, value }],
-    //   create_new_attributes: []
-    // }]
-    const response = await api.post('/questions/bulk', questionsData);
+    // ✅ CORRECT ENDPOINT
+    const response = await api.post('/questions/bulk_create', questionsData);
     return response.data;
   },
 };

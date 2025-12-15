@@ -450,154 +450,165 @@ export default function UploadPage() {
   };
 
   const handleSingleUpload = async () => {
-    if (!formData.content || selectedAttributes.length === 0) {
-      alert('Please fill in question content and select at least one attribute');
-      return;
+  if (!formData.content || selectedAttributes.length === 0) {
+    alert('Please fill in question content and select at least one attribute');
+    return;
+  }
+
+  setUploading(true);
+
+  try {
+    let imageUrl = undefined;
+    const optionImageUrls: any = {};
+
+    if (imageFile) {
+      imageUrl = await uploadImage(imageFile, 'question');
     }
 
-    setUploading(true);
-
-    try {
-      let imageUrl = undefined;
-      const optionImageUrls: any = {};
-
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile, 'question');
+    for (const [key, file] of Object.entries(optionImages)) {
+      if (file) {
+        optionImageUrls[`${key}_image`] = await uploadImage(file, 'option');
       }
-
-      for (const [key, file] of Object.entries(optionImages)) {
-        if (file) {
-          optionImageUrls[`${key}_image`] = await uploadImage(file, 'option');
-        }
-      }
-
-      const questionData = {
-        question: {
-          content: formData.content,
-          options: [formData.option_a, formData.option_b, formData.option_c, formData.option_d],
-          correct_answer: formData.correct_answer,
-          difficulty: formData.difficulty,
-          discrimination: formData.discrimination,
-          guessing: formData.guessing,
-          exam_id: hierarchyPath.exam_id,
-          subject_id: hierarchyPath.subject_id,
-          chapter_id: hierarchyPath.chapter_id,
-          topic_id: hierarchyPath.topic_id,
-          image_url: imageUrl,
-          option_a_image: optionImageUrls['option_a_image'],
-          option_b_image: optionImageUrls['option_b_image'],
-          option_c_image: optionImageUrls['option_c_image'],
-          option_d_image: optionImageUrls['option_d_image'],
-          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
-          explanation: formData.explanation,
-          year: formData.year,
-        },
-        selected_attributes: selectedAttributes.map(attrId => ({
-          attribute_id: attrId,
-          value: true
-        })),
-        create_new_attributes: []
-      };
-
-      uploadMutation.mutate(questionData);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload question');
-    } finally {
-      setUploading(false);
     }
-  };
+
+    // ✅ FIXED: Backend expects individual option fields, not array
+    const questionData = {
+      question: {
+        content: formData.content,
+        option_a: formData.option_a,          // ✅ Individual fields
+        option_b: formData.option_b,
+        option_c: formData.option_c,
+        option_d: formData.option_d,
+        correct_answer: formData.correct_answer,
+        difficulty: formData.difficulty,
+        discrimination: formData.discrimination,
+        guessing: formData.guessing,
+        exam_id: hierarchyPath.exam_id,
+        class_id: hierarchyPath.class_id,     // ✅ Add class_id for school exams
+        subject_id: hierarchyPath.subject_id,
+        chapter_id: hierarchyPath.chapter_id,
+        topic_id: hierarchyPath.topic_id,
+        image_url: imageUrl,
+        option_a_image: optionImageUrls['option_a_image'],
+        option_b_image: optionImageUrls['option_b_image'],
+        option_c_image: optionImageUrls['option_c_image'],
+        option_d_image: optionImageUrls['option_d_image'],
+        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+        explanation: formData.explanation,
+        year: formData.year,
+      },
+      selected_attributes: selectedAttributes.map(attrId => ({
+        attribute_id: attrId,
+        value: true
+      })),
+      create_new_attributes: []
+    };
+
+    uploadMutation.mutate(questionData);
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert('Failed to upload question');
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleMultipleUpload = async () => {
-    const incompleteQuestions = multipleQuestions.filter(
-      q => !q.content || !q.option_a || !q.option_b || q.selectedAttributes.length === 0
+  const incompleteQuestions = multipleQuestions.filter(
+    q => !q.content || !q.option_a || !q.option_b || q.selectedAttributes.length === 0
+  );
+  
+  if (incompleteQuestions.length > 0) {
+    alert('Please fill in all required fields and select at least one attribute for each question');
+    return;
+  }
+
+  setUploading(true);
+
+  try {
+    const questionsData = await Promise.all(
+      multipleQuestions.map(async (q) => {
+        let imageUrl = undefined;
+        const optionImageUrls: any = {};
+
+        if (q.image) {
+          imageUrl = await uploadImage(q.image, 'question');
+        }
+
+        for (const opt of ['option_a', 'option_b', 'option_c', 'option_d']) {
+          const optImage = (q as any)[`${opt}_image`];
+          if (optImage) {
+            optionImageUrls[`${opt}_image`] = await uploadImage(optImage, 'option');
+          }
+        }
+
+        // ✅ FIXED: Individual option fields
+        return {
+          question: {
+            content: q.content,
+            option_a: q.option_a,             // ✅ Individual fields
+            option_b: q.option_b,
+            option_c: q.option_c,
+            option_d: q.option_d,
+            correct_answer: q.correct_answer,
+            difficulty: q.difficulty,
+            discrimination: q.discrimination,
+            guessing: q.guessing,
+            exam_id: hierarchyPath.exam_id,
+            class_id: hierarchyPath.class_id, // ✅ Add class_id
+            subject_id: hierarchyPath.subject_id,
+            chapter_id: hierarchyPath.chapter_id,
+            topic_id: hierarchyPath.topic_id,
+            tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
+            explanation: q.explanation,
+            year: q.year,
+            image_url: imageUrl,
+            ...optionImageUrls,
+          },
+          selected_attributes: q.selectedAttributes.map(attrId => ({
+            attribute_id: attrId,
+            value: true
+          })),
+          create_new_attributes: []
+        };
+      })
     );
-    
-    if (incompleteQuestions.length > 0) {
-      alert('Please fill in all required fields and select at least one attribute for each question');
-      return;
-    }
 
-    setUploading(true);
-
-    try {
-      const questionsData = await Promise.all(
-        multipleQuestions.map(async (q) => {
-          let imageUrl = undefined;
-          const optionImageUrls: any = {};
-
-          if (q.image) {
-            imageUrl = await uploadImage(q.image, 'question');
-          }
-
-          for (const opt of ['option_a', 'option_b', 'option_c', 'option_d']) {
-            const optImage = (q as any)[`${opt}_image`];
-            if (optImage) {
-              optionImageUrls[`${opt}_image`] = await uploadImage(optImage, 'option');
-            }
-          }
-
-          return {
-            question: {
-              content: q.content,
-              options: [q.option_a, q.option_b, q.option_c, q.option_d],
-              correct_answer: q.correct_answer,
-              difficulty: q.difficulty,
-              discrimination: q.discrimination,
-              guessing: q.guessing,
-              exam_id: hierarchyPath.exam_id,
-              subject_id: hierarchyPath.subject_id,
-              chapter_id: hierarchyPath.chapter_id,
-              topic_id: hierarchyPath.topic_id,
-              tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
-              explanation: q.explanation,
-              year: q.year,
-              image_url: imageUrl,
-              ...optionImageUrls,
-            },
-            selected_attributes: q.selectedAttributes.map(attrId => ({
-              attribute_id: attrId,
-              value: true
-            })),
-            create_new_attributes: []
-          };
-        })
-      );
-
-      bulkUploadMutation.mutate(questionsData);
-      setMultipleQuestions([{
-        id: Date.now(),
-        content: '',
-        option_a: '',
-        option_b: '',
-        option_c: '',
-        option_d: '',
-        correct_answer: 'A',
-        difficulty: 0.5,
-        discrimination: 1.5,
-        guessing: 0.25,
-        tags: '',
-        explanation: '',
-        year: new Date().getFullYear(),
-        image: null,
-        imagePreview: null,
-        option_a_image: null,
-        option_a_image_preview: null,
-        option_b_image: null,
-        option_b_image_preview: null,
-        option_c_image: null,
-        option_c_image_preview: null,
-        option_d_image: null,
-        option_d_image_preview: null,
-        selectedAttributes: [],
-      }]);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Failed to upload questions');
-    } finally {
-      setUploading(false);
-    }
-  };
+    bulkUploadMutation.mutate(questionsData);
+    // Reset form
+    setMultipleQuestions([{
+      id: Date.now(),
+      content: '',
+      option_a: '',
+      option_b: '',
+      option_c: '',
+      option_d: '',
+      correct_answer: 'A',
+      difficulty: 0.5,
+      discrimination: 1.5,
+      guessing: 0.25,
+      tags: '',
+      explanation: '',
+      year: new Date().getFullYear(),
+      image: null,
+      imagePreview: null,
+      option_a_image: null,
+      option_a_image_preview: null,
+      option_b_image: null,
+      option_b_image_preview: null,
+      option_c_image: null,
+      option_c_image_preview: null,
+      option_d_image: null,
+      option_d_image_preview: null,
+      selectedAttributes: [],
+    }]);
+  } catch (error) {
+    console.error('Upload error:', error);
+    alert('Failed to upload questions');
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleBulkUpload = () => {
     if (bulkQuestions.length === 0) {
