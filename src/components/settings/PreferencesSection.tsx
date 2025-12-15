@@ -65,6 +65,7 @@ export function PreferencesSection() {
         <div className="space-y-4">
           {preferenceItems.map((item) => (
             <div
+            
               key={item.key}
               className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:bg-blue-900 transition-colors"
             >
