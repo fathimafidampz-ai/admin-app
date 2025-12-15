@@ -69,7 +69,7 @@ export function CreateChapterForm({ subjectId, subjectName, onSuccess }: CreateC
       <CardHeader>
         <CardTitle>Create New Chapter</CardTitle>
         <CardDescription>
-          Add a chapter under <span className="font-semibold text-gray-900">{subjectName}</span>
+          Add a chapter under <span className=" focus:border-primary-500 focus:ring-2 focus:ring-primary-200 transition-colors duration-200">{subjectName}</span>
         </CardDescription>
       </CardHeader>
       <CardContent>

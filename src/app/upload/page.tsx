@@ -42,8 +42,7 @@ interface HierarchyPath {
   chapter_name?: string;
   topic_id?: string;
   topic_name?: string;
-  concept_id?: string;
-  concept_name?: string;
+  attribute_names?: string;
 }
 
 export default function UploadPage() {
@@ -51,7 +50,6 @@ export default function UploadPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ CHECK AUTHENTICATION
   useEffect(() => {
     const token = localStorage.getItem('auth_token');
     if (!token) {
@@ -72,7 +70,7 @@ export default function UploadPage() {
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedChapter, setSelectedChapter] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
-  const [selectedConcept, setSelectedConcept] = useState('');
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
 
   const [bulkQuestions, setBulkQuestions] = useState<BulkQuestion[]>([]);
   const [uploadStatus, setUploadStatus] = useState<{
@@ -99,7 +97,6 @@ export default function UploadPage() {
     year: new Date().getFullYear(),
     image: null as File | null,
     imagePreview: null as string | null,
-    // ✅ Option images
     option_a_image: null as File | null,
     option_a_image_preview: null as string | null,
     option_b_image: null as File | null,
@@ -108,6 +105,7 @@ export default function UploadPage() {
     option_c_image_preview: null as string | null,
     option_d_image: null as File | null,
     option_d_image_preview: null as string | null,
+    selectedAttributes: [] as string[],
   }]);
 
   // Single question form
@@ -130,7 +128,6 @@ export default function UploadPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // ✅ Option images for single upload
   const [optionImages, setOptionImages] = useState({
     option_a: null as File | null,
     option_b: null as File | null,
@@ -181,9 +178,9 @@ export default function UploadPage() {
     enabled: !!selectedChapter,
   });
 
-  const { data: concepts } = useQuery({
-    queryKey: ['concepts', selectedTopic],
-    queryFn: () => hierarchyApi.getConcepts(selectedTopic),
+  const { data: attributes, isLoading: attributesLoading } = useQuery({
+    queryKey: ['attributes', selectedTopic],
+    queryFn: () => hierarchyApi.getAttributes(selectedTopic),
     enabled: !!selectedTopic,
   });
 
@@ -232,7 +229,7 @@ export default function UploadPage() {
     setSelectedSubject('');
     setSelectedChapter('');
     setSelectedTopic('');
-    setSelectedConcept('');
+    setSelectedAttributes([]);
     
     if (exam) {
       setHierarchyPath({
@@ -249,7 +246,7 @@ export default function UploadPage() {
     setSelectedSubject('');
     setSelectedChapter('');
     setSelectedTopic('');
-    setSelectedConcept('');
+    setSelectedAttributes([]);
     
     if (classItem) {
       setHierarchyPath(prev => ({
@@ -265,7 +262,7 @@ export default function UploadPage() {
     setSelectedSubject(subjectId);
     setSelectedChapter('');
     setSelectedTopic('');
-    setSelectedConcept('');
+    setSelectedAttributes([]);
     
     if (subject) {
       setHierarchyPath(prev => ({
@@ -280,7 +277,7 @@ export default function UploadPage() {
     const chapter = chapters?.find((c: any) => c.id === chapterId);
     setSelectedChapter(chapterId);
     setSelectedTopic('');
-    setSelectedConcept('');
+    setSelectedAttributes([]);
     
     if (chapter) {
       setHierarchyPath(prev => ({
@@ -294,7 +291,7 @@ export default function UploadPage() {
   const handleTopicChange = (topicId: string) => {
     const topic = topics?.find((t: any) => t.id === topicId);
     setSelectedTopic(topicId);
-    setSelectedConcept('');
+    setSelectedAttributes([]);
     
     if (topic) {
       setHierarchyPath(prev => ({
@@ -305,17 +302,25 @@ export default function UploadPage() {
     }
   };
 
-  const handleConceptChange = (conceptId: string) => {
-    const concept = concepts?.find((c: any) => c.id === conceptId);
-    setSelectedConcept(conceptId);
-    
-    if (concept) {
-      setHierarchyPath(prev => ({
-        ...prev,
-        concept_id: concept.id,
-        concept_name: concept.name,
+  const handleAttributeToggle = (attributeId: string) => {
+    setSelectedAttributes(prev => {
+      const newSelected = prev.includes(attributeId)
+        ? prev.filter(id => id !== attributeId)
+        : [...prev, attributeId];
+      
+      // Update hierarchy path with selected attribute names
+      const selectedAttrNames = attributes
+        ?.filter((a: any) => newSelected.includes(a.id))
+        .map((a: any) => a.name)
+        .join(', ');
+      
+      setHierarchyPath(current => ({
+        ...current,
+        attribute_names: selectedAttrNames,
       }));
-    }
+      
+      return newSelected;
+    });
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -330,7 +335,6 @@ export default function UploadPage() {
     }
   };
 
-  // ✅ Handle option image for single upload
   const handleOptionImageChange = (option: string, file: File | null) => {
     if (file) {
       setOptionImages(prev => ({ ...prev, [option]: file }));
@@ -356,7 +360,6 @@ export default function UploadPage() {
     reader.readAsDataURL(file);
   };
 
-  // ✅ Handle option image for multiple questions
   const handleOptionImageSelect = (questionIndex: number, optionKey: string, file: File) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -400,6 +403,7 @@ export default function UploadPage() {
       option_c_image_preview: null,
       option_d_image: null,
       option_d_image_preview: null,
+      selectedAttributes: [],
     }]);
   };
 
@@ -446,8 +450,8 @@ export default function UploadPage() {
   };
 
   const handleSingleUpload = async () => {
-    if (!formData.content || !selectedConcept) {
-      alert('Please fill in question content and select a concept');
+    if (!formData.content || selectedAttributes.length === 0) {
+      alert('Please fill in question content and select at least one attribute');
       return;
     }
 
@@ -457,12 +461,10 @@ export default function UploadPage() {
       let imageUrl = undefined;
       const optionImageUrls: any = {};
 
-      // Upload main question image
       if (imageFile) {
         imageUrl = await uploadImage(imageFile, 'question');
       }
 
-      // ✅ Upload option images
       for (const [key, file] of Object.entries(optionImages)) {
         if (file) {
           optionImageUrls[`${key}_image`] = await uploadImage(file, 'option');
@@ -470,11 +472,31 @@ export default function UploadPage() {
       }
 
       const questionData = {
-        ...formData,
-        concept_id: selectedConcept,
-        image_url: imageUrl,
-        ...optionImageUrls,
-        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+        question: {
+          content: formData.content,
+          options: [formData.option_a, formData.option_b, formData.option_c, formData.option_d],
+          correct_answer: formData.correct_answer,
+          difficulty: formData.difficulty,
+          discrimination: formData.discrimination,
+          guessing: formData.guessing,
+          exam_id: hierarchyPath.exam_id,
+          subject_id: hierarchyPath.subject_id,
+          chapter_id: hierarchyPath.chapter_id,
+          topic_id: hierarchyPath.topic_id,
+          image_url: imageUrl,
+          option_a_image: optionImageUrls['option_a_image'],
+          option_b_image: optionImageUrls['option_b_image'],
+          option_c_image: optionImageUrls['option_c_image'],
+          option_d_image: optionImageUrls['option_d_image'],
+          tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+          explanation: formData.explanation,
+          year: formData.year,
+        },
+        selected_attributes: selectedAttributes.map(attrId => ({
+          attribute_id: attrId,
+          value: true
+        })),
+        create_new_attributes: []
       };
 
       uploadMutation.mutate(questionData);
@@ -487,14 +509,12 @@ export default function UploadPage() {
   };
 
   const handleMultipleUpload = async () => {
-    if (!selectedConcept) {
-      alert('Please select a concept');
-      return;
-    }
-
-    const incompleteQuestions = multipleQuestions.filter(q => !q.content || !q.option_a || !q.option_b);
+    const incompleteQuestions = multipleQuestions.filter(
+      q => !q.content || !q.option_a || !q.option_b || q.selectedAttributes.length === 0
+    );
+    
     if (incompleteQuestions.length > 0) {
-      alert('Please fill in all required fields for all questions');
+      alert('Please fill in all required fields and select at least one attribute for each question');
       return;
     }
 
@@ -506,12 +526,10 @@ export default function UploadPage() {
           let imageUrl = undefined;
           const optionImageUrls: any = {};
 
-          // Upload main image
           if (q.image) {
             imageUrl = await uploadImage(q.image, 'question');
           }
 
-          // ✅ Upload option images
           for (const opt of ['option_a', 'option_b', 'option_c', 'option_d']) {
             const optImage = (q as any)[`${opt}_image`];
             if (optImage) {
@@ -520,21 +538,28 @@ export default function UploadPage() {
           }
 
           return {
-            content: q.content,
-            option_a: q.option_a,
-            option_b: q.option_b,
-            option_c: q.option_c,
-            option_d: q.option_d,
-            correct_answer: q.correct_answer,
-            difficulty: q.difficulty,
-            discrimination: q.discrimination,
-            guessing: q.guessing,
-            tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
-            explanation: q.explanation,
-            year: q.year,
-            concept_id: selectedConcept,
-            image_url: imageUrl,
-            ...optionImageUrls,
+            question: {
+              content: q.content,
+              options: [q.option_a, q.option_b, q.option_c, q.option_d],
+              correct_answer: q.correct_answer,
+              difficulty: q.difficulty,
+              discrimination: q.discrimination,
+              guessing: q.guessing,
+              exam_id: hierarchyPath.exam_id,
+              subject_id: hierarchyPath.subject_id,
+              chapter_id: hierarchyPath.chapter_id,
+              topic_id: hierarchyPath.topic_id,
+              tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
+              explanation: q.explanation,
+              year: q.year,
+              image_url: imageUrl,
+              ...optionImageUrls,
+            },
+            selected_attributes: q.selectedAttributes.map(attrId => ({
+              attribute_id: attrId,
+              value: true
+            })),
+            create_new_attributes: []
           };
         })
       );
@@ -564,6 +589,7 @@ export default function UploadPage() {
         option_c_image_preview: null,
         option_d_image: null,
         option_d_image_preview: null,
+        selectedAttributes: [],
       }]);
     } catch (error) {
       console.error('Upload error:', error);
@@ -579,18 +605,35 @@ export default function UploadPage() {
       return;
     }
 
-    if (!selectedConcept) {
-      alert('Please select a concept');
+    if (selectedAttributes.length === 0) {
+      alert('Please select at least one attribute');
       return;
     }
 
-    const questionsWithConcept = bulkQuestions.map(q => ({
-      ...q,
-      concept_id: selectedConcept,
-      tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
+    const questionsWithAttributes = bulkQuestions.map(q => ({
+      question: {
+        content: q.content,
+        options: [q.option_a, q.option_b, q.option_c, q.option_d],
+        correct_answer: q.correct_answer,
+        difficulty: q.difficulty,
+        discrimination: q.discrimination,
+        guessing: q.guessing,
+        exam_id: hierarchyPath.exam_id,
+        subject_id: hierarchyPath.subject_id,
+        chapter_id: hierarchyPath.chapter_id,
+        topic_id: hierarchyPath.topic_id,
+        tags: q.tags ? q.tags.split(',').map(t => t.trim()) : [],
+        explanation: q.explanation,
+        year: q.year,
+      },
+      selected_attributes: selectedAttributes.map(attrId => ({
+        attribute_id: attrId,
+        value: true
+      })),
+      create_new_attributes: []
     }));
 
-    bulkUploadMutation.mutate(questionsWithConcept);
+    bulkUploadMutation.mutate(questionsWithAttributes);
   };
 
   const resetForm = () => {
@@ -622,6 +665,7 @@ export default function UploadPage() {
       option_c: null,
       option_d: null,
     });
+    setSelectedAttributes([]);
   };
 
   const downloadTemplate = () => {
@@ -718,10 +762,10 @@ export default function UploadPage() {
                     <span className="font-semibold">{hierarchyPath.topic_name}</span>
                   </>
                 )}
-                {hierarchyPath.concept_name && (
+                {hierarchyPath.attribute_names && (
                   <>
                     <span>→</span>
-                    <span className="font-semibold text-success-700 dark:text-success-300">{hierarchyPath.concept_name}</span>
+                    <span className="font-semibold text-success-700 dark:text-success-300">{hierarchyPath.attribute_names}</span>
                   </>
                 )}
               </div>
@@ -833,27 +877,6 @@ export default function UploadPage() {
                 </select>
               </div>
             )}
-
-            {/* Concept */}
-            {selectedTopic && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {hierarchyPath.exam_type === 'school' ? '6' : '5'}. Select Concept *
-                </label>
-                <select
-                  value={selectedConcept}
-                  onChange={(e) => handleConceptChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">Select concept...</option>
-                  {concepts?.map((concept: any) => (
-                    <option key={concept.id} value={concept.id}>
-                      {concept.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -866,6 +889,103 @@ export default function UploadPage() {
             <CardDescription>Upload one question at a time</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* ✅ ATTRIBUTE SELECTOR */}
+            {selectedTopic && (
+              <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border-2 border-primary-200 dark:border-primary-700">
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Select Attributes for this Question *
+                  <span className="ml-2 text-xs text-gray-600 dark:text-gray-400 font-normal">
+                    (You can select multiple)
+                  </span>
+                </label>
+                
+                {attributesLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Loading attributes...</span>
+                  </div>
+                ) : attributes && attributes.length > 0 ? (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {attributes.map((attribute: any) => (
+                      <label
+                        key={attribute.id}
+                        className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedAttributes.includes(attribute.id)}
+                          onChange={() => handleAttributeToggle(attribute.id)}
+                          className="mt-1 w-4 h-4 text-primary-600 rounded focus:ring-2 focus:ring-primary-500"
+                        />
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-white">
+                            {attribute.name}
+                          </div>
+                          {attribute.description && (
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                              {attribute.description}
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      No attributes found for <strong>{hierarchyPath.topic_name}</strong>.
+                      Please go to <strong>Create Hierarchy</strong> page to add attributes first.
+                    </p>
+                  </div>
+                )}
+                
+                {selectedAttributes.length > 0 && (
+                  <div className="mt-3 p-3 bg-success-50 dark:bg-success-900/20 rounded border border-success-200 dark:border-success-800">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle className="w-4 h-4 text-success-700 dark:text-success-300 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-success-700 dark:text-success-300">
+                          Selected {selectedAttributes.length} attribute{selectedAttributes.length > 1 ? 's' : ''}:
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {attributes
+                            ?.filter((a: any) => selectedAttributes.includes(a.id))
+                            .map((attr: any) => (
+                              <span
+                                key={attr.id}
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-300 rounded text-xs font-medium"
+                              >
+                                {attr.name}
+                                <button
+                                  onClick={() => handleAttributeToggle(attr.id)}
+                                  className="hover:text-success-900 dark:hover:text-success-100"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {!attributesLoading && attributes && attributes.length > 0 && selectedAttributes.length === 0 && (
+                  <p className="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                    ⚠️ Please select at least one attribute before uploading
+                  </p>
+                )}
+              </div>
+            )}
+
+            {!selectedTopic && (
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  👆 Please select a complete hierarchy path above (Exam → Subject → Chapter → Topic) to choose attributes
+                </p>
+              </div>
+            )}
+
             {/* Question Content */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -913,7 +1033,7 @@ export default function UploadPage() {
               />
             </div>
 
-            {/* ✅ Options with Image Upload */}
+            {/* Options with Image Upload */}
             <div className="grid grid-cols-1 gap-4 mb-4">
               {['option_a', 'option_b', 'option_c', 'option_d'].map((opt, idx) => (
                 <div key={opt} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50">
@@ -926,7 +1046,6 @@ export default function UploadPage() {
                     className="mb-2"
                   />
                   
-                  {/* Option Image Upload */}
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -1069,7 +1188,7 @@ export default function UploadPage() {
               <Button
                 variant="primary"
                 onClick={handleSingleUpload}
-                disabled={uploading || uploadMutation.isPending || !selectedConcept}
+                disabled={uploading || uploadMutation.isPending || selectedAttributes.length === 0}
                 className="flex-1"
               >
                 {uploading || uploadMutation.isPending ? (
@@ -1081,6 +1200,7 @@ export default function UploadPage() {
                   <>
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Question
+                    {selectedAttributes.length === 0 && ' (Select Attributes First)'}
                   </>
                 )}
               </Button>
@@ -1136,6 +1256,47 @@ export default function UploadPage() {
                     />
                   </div>
 
+                  {/* ✅ Attribute Selection for this Question */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Select Attributes (Multiple) *
+                    </label>
+                    <div className="space-y-1 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded p-2 bg-white dark:bg-gray-900">
+                      {attributes && attributes.length > 0 ? (
+                        attributes.map((attribute: any) => (
+                          <label
+                            key={attribute.id}
+                            className="flex items-center gap-2 p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={question.selectedAttributes.includes(attribute.id)}
+                              onChange={(e) => {
+                                const newQuestions = [...multipleQuestions];
+                                if (e.target.checked) {
+                                  newQuestions[index].selectedAttributes.push(attribute.id);
+                                } else {
+                                  newQuestions[index].selectedAttributes = 
+                                    newQuestions[index].selectedAttributes.filter(id => id !== attribute.id);
+                                }
+                                setMultipleQuestions(newQuestions);
+                              }}
+                              className="w-3 h-3 text-primary-600 rounded"
+                            />
+                            <span className="text-xs text-gray-900 dark:text-white">{attribute.name}</span>
+                          </label>
+                        ))
+                      ) : (
+                        <p className="text-xs text-gray-500 p-2">No attributes available. Please select a topic first.</p>
+                      )}
+                    </div>
+                    {question.selectedAttributes.length > 0 && (
+                      <div className="mt-1 text-xs text-success-600 dark:text-success-400">
+                        ✓ {question.selectedAttributes.length} selected
+                      </div>
+                    )}
+                  </div>
+
                   {/* Image Upload */}
                   <div className="mb-3">
                     <Button
@@ -1160,65 +1321,64 @@ export default function UploadPage() {
                     )}
                   </div>
 
-                  {/* ✅ Options with Image Upload */}
-                  <div className="grid grid-cols-1 gap-3 mb-3">
-                    {['option_a', 'option_b', 'option_c', 'option_d'].map((opt, optIdx) => (
-                      <div key={opt} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-900">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Option {String.fromCharCode(65 + optIdx)} *
-                        </label>
-                        <Input
-                          value={question[opt as keyof typeof question] as string}
-                          onChange={(e) => {
-                            const newQuestions = [...multipleQuestions];
-                            (newQuestions[index] as any)[opt] = e.target.value;
-                            setMultipleQuestions(newQuestions);
-                          }}
-                          className="mb-2"
-                        />
-                        
-                        {/* Option Image */}
-                        <div className="flex items-center gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                              const input = document.createElement('input');
-                              input.type = 'file';
-                              input.accept = 'image/*';
-                              input.onchange = (e: any) => {
-                                const file = e.target.files?.[0];
-                                if (file) handleOptionImageSelect(index, opt, file);
-                              };
-                              input.click();
-                            }}
-                          >
-                            <ImageIcon className="w-3 h-3 mr-1" />
-                            {(question as any)[`${opt}_image`] ? 'Change' : 'Add Image'}
-                          </Button>
-                          
-                          {(question as any)[`${opt}_image`] && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => removeOptionImage(index, opt)}
-                              className="text-error-600 dark:text-error-400"
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
-                          )}
-                        </div>
-                        
-                        {(question as any)[`${opt}_image_preview`] && (
-                          <img 
-                            src={(question as any)[`${opt}_image_preview`]} 
-                            alt={`Option ${String.fromCharCode(65 + optIdx)}`} 
-                            className="mt-2 max-h-24 rounded border border-gray-300 dark:border-gray-600" 
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                  {/* Options with Image Upload */}
+<div className="grid grid-cols-1 gap-3 mb-3">
+  {['option_a', 'option_b', 'option_c', 'option_d'].map((opt, optIdx) => (
+    <div key={opt} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
+      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Option {String.fromCharCode(65 + optIdx)} *
+      </label>
+      <Input
+        value={question[opt as keyof typeof question] as string}
+        onChange={(e) => {
+          const newQuestions = [...multipleQuestions];
+          (newQuestions[index] as any)[opt] = e.target.value;
+          setMultipleQuestions(newQuestions);
+        }}
+        className="mb-2"
+      />
+      
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e: any) => {
+              const file = e.target.files?.[0];
+              if (file) handleOptionImageSelect(index, opt, file);
+            };
+            input.click();
+          }}
+        >
+          <ImageIcon className="w-3 h-3 mr-1" />
+          {(question as any)[`${opt}_image`] ? 'Change' : 'Add Image'}
+        </Button>
+        
+        {(question as any)[`${opt}_image`] && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => removeOptionImage(index, opt)}
+            className="text-error-600 dark:text-error-400"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        )}
+      </div>
+      
+      {(question as any)[`${opt}_image_preview`] && (
+        <img 
+          src={(question as any)[`${opt}_image_preview`]} 
+          alt={`Option ${String.fromCharCode(65 + optIdx)}`} 
+          className="mt-2 max-h-24 rounded border border-gray-300 dark:border-gray-600" 
+        />
+      )}
+    </div>
+  ))}
+</div>
 
                   {/* Correct Answer & Parameters */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1308,7 +1468,7 @@ export default function UploadPage() {
                 <Button
                   variant="primary"
                   onClick={handleMultipleUpload}
-                  disabled={uploading || bulkUploadMutation.isPending || !selectedConcept}
+                  disabled={uploading || bulkUploadMutation.isPending}
                   className="flex-1"
                 >
                   {uploading || bulkUploadMutation.isPending ? (
@@ -1337,6 +1497,53 @@ export default function UploadPage() {
             <CardDescription>Upload multiple questions at once</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Attribute Selector for Bulk Upload */}
+            {selectedTopic && (
+              <div className="mb-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border-2 border-primary-200 dark:border-primary-700">
+                <label className="block text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  Select Attributes for All Questions *
+                  <span className="ml-2 text-xs text-gray-600 dark:text-gray-400 font-normal">
+                    (These will apply to all bulk uploaded questions)
+                  </span>
+                </label>
+                
+                {attributesLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Loading attributes...</span>
+                  </div>
+                ) : attributes && attributes.length > 0 ? (
+                  <>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {attributes.map((attribute: any) => (
+                        <label
+                          key={attribute.id}
+                          className="flex items-center gap-2 p-2 rounded hover:bg-white dark:hover:bg-gray-800 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedAttributes.includes(attribute.id)}
+                            onChange={() => handleAttributeToggle(attribute.id)}
+                            className="w-4 h-4 text-primary-600 rounded"
+                          />
+                          <span className="text-sm text-gray-900 dark:text-white">{attribute.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                    {selectedAttributes.length > 0 && (
+                      <div className="mt-2 text-xs text-success-600 dark:text-success-400">
+                        ✓ {selectedAttributes.length} attribute{selectedAttributes.length > 1 ? 's' : ''} selected
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    No attributes available. Please create attributes first.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Download Template */}
             <div className="mb-6">
               <Button variant="outline" onClick={downloadTemplate}>
@@ -1393,7 +1600,7 @@ export default function UploadPage() {
                 <Button
                   variant="primary"
                   onClick={handleBulkUpload}
-                  disabled={bulkUploadMutation.isPending || !selectedConcept}
+                  disabled={bulkUploadMutation.isPending || selectedAttributes.length === 0}
                   className="w-full"
                 >
                   {bulkUploadMutation.isPending ? (
@@ -1405,6 +1612,7 @@ export default function UploadPage() {
                     <>
                       <Upload className="w-4 h-4 mr-2" />
                       Upload {bulkQuestions.length} Questions
+                      {selectedAttributes.length === 0 && ' (Select Attributes First)'}
                     </>
                   )}
                 </Button>

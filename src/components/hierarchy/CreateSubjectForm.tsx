@@ -84,7 +84,7 @@ export function CreateSubjectForm({
       <CardHeader>
         <CardTitle>Create New Subject</CardTitle>
         <CardDescription>
-          Add a subject under <span className="font-semibold text-gray-900">{parentName}</span>
+          Add a subject under <span className="font-semibold text-primary-700 dark:text-primary-300">{parentName}</span>
         </CardDescription>
       </CardHeader>
       <CardContent>

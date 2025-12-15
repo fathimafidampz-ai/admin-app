@@ -971,15 +971,28 @@ export const questionsApi = {
     return response.data;
   },
 
-  create: async (question: any) => {
+  // ✅ UPDATED: Single question creation matching API spec
+  create: async (questionData: any) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const newQuestion = { ...question, id: Date.now().toString() };
+      
+      // For mock, just create a simple question
+      const newQuestion = {
+        id: Date.now().toString(),
+        ...questionData.question,
+        created_at: new Date().toISOString(),
+      };
       MOCK_QUESTIONS.push(newQuestion);
       return newQuestion;
     }
 
-    const response = await api.post('/questions', question);
+    // Real API expects this structure:
+    // {
+    //   question: { content, options, correct_answer, ... },
+    //   selected_attributes: [{ attribute_id, value }],
+    //   create_new_attributes: []
+    // }
+    const response = await api.post('/questions/create', questionData);
     return response.data;
   },
 
@@ -1011,18 +1024,28 @@ export const questionsApi = {
     await api.delete(`/questions/${id}`);
   },
 
-  bulkCreate: async (questions: any[]) => {
+  // ✅ UPDATED: Bulk creation matching API spec
+  bulkCreate: async (questionsData: any[]) => {
     if (USE_MOCK_API) {
       await new Promise(resolve => setTimeout(resolve, 800));
-      const newQuestions = questions.map(q => ({
-        ...q,
-        id: Date.now().toString() + Math.random()
+      
+      const newQuestions = questionsData.map((qData, index) => ({
+        id: (Date.now() + index).toString(),
+        ...qData.question,
+        created_at: new Date().toISOString(),
       }));
+      
       MOCK_QUESTIONS.push(...newQuestions);
       return newQuestions;
     }
 
-    const response = await api.post('/questions/bulk', { questions });
+    // Real API expects array of objects with structure:
+    // [{
+    //   question: { content, options, correct_answer, ... },
+    //   selected_attributes: [{ attribute_id, value }],
+    //   create_new_attributes: []
+    // }]
+    const response = await api.post('/questions/bulk', questionsData);
     return response.data;
   },
 };

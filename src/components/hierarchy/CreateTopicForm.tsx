@@ -69,7 +69,7 @@ export function CreateTopicForm({ chapterId, chapterName, onSuccess }: CreateTop
       <CardHeader>
         <CardTitle>Create New Topic</CardTitle>
         <CardDescription>
-          Add a topic under <span className="font-semibold text-gray-900">{chapterName}</span>
+          Add a topic under <span className="font-semibold text-primary-700 dark:text-primary-300">{chapterName}</span>
         </CardDescription>
       </CardHeader>
       <CardContent>
