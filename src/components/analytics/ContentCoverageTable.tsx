@@ -53,7 +53,8 @@ export function ContentCoverageTable({ data }: ContentCoverageTableProps) {
                 </tr>
               ) : (
                 data.map((item, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={index} className="border-b border-gray-100 hover:bg-sky-50 dark:border-gray-700 dark:hover:bg-sky-900">
+
                     <td className="py-3 px-4 font-medium text-gray-900">{item.exam}</td>
                     <td className="text-center py-3 px-4 text-gray-700">{item.subjects}</td>
                     <td className="text-center py-3 px-4 text-gray-700">{item.chapters}</td>

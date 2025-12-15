@@ -1,7 +1,23 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useTheme } from 'next-themes';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/Card';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 
 interface HierarchyDistributionChartProps {
   data: {
@@ -15,15 +31,18 @@ interface HierarchyDistributionChartProps {
 }
 
 const COLORS = [
-  '#0ea5e9', // primary-500
-  '#a855f7', // secondary-500
-  '#22c55e', // success-500
-  '#f59e0b', // warning-500
-  '#ef4444', // error-500
-  '#8b5cf6', // purple-500
+  '#0ea5e9',
+  '#a855f7',
+  '#22c55e',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
 ];
 
 export function HierarchyDistributionChart({ data }: HierarchyDistributionChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const chartData = [
     { name: 'Exams', value: data.exams },
     { name: 'Classes', value: data.classes },
@@ -41,28 +60,53 @@ export function HierarchyDistributionChart({ data }: HierarchyDistributionChartP
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
-              dataKey="name" 
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              axisLine={{ stroke: '#e5e7eb' }}
+          <BarChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 16 }}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke={isDark ? 'rgba(75,85,99,0.6)' : '#e5e7eb'}
             />
-            <YAxis 
-              tick={{ fill: '#6b7280', fontSize: 12 }}
-              axisLine={{ stroke: '#e5e7eb' }}
+            <XAxis
+              dataKey="name"
+              tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}
+              axisLine={{ stroke: isDark ? '#4b5563' : '#e5e7eb' }}
+              tickLine={{ stroke: isDark ? '#4b5563' : '#e5e7eb' }}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: '#fff', 
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            <YAxis
+              tick={{ fill: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}
+              axisLine={{ stroke: isDark ? '#4b5563' : '#e5e7eb' }}
+              tickLine={{ stroke: isDark ? '#4b5563' : '#e5e7eb' }}
+            />
+            <Tooltip
+              cursor={false}  // <- removes the gray hover block entirely
+              wrapperStyle={{ outline: 'none' }}
+              contentStyle={{
+                backgroundColor: isDark ? 'rgba(15,23,42,0.98)' : '#ffffff',
+                border: `1px solid ${isDark ? '#4b5563' : '#e5e7eb'}`,
+                borderRadius: 8,
+                boxShadow: isDark
+                  ? '0 10px 25px -5px rgba(0,0,0,0.7)'
+                  : '0 4px 6px -1px rgba(0,0,0,0.1)',
+                color: isDark ? '#f9fafb' : '#111827',
+                padding: '8px 10px',
+              }}
+              labelStyle={{
+                color: isDark ? '#e5e7eb' : '#374151',
+                fontSize: 12,
+                marginBottom: 4,
+              }}
+              itemStyle={{
+                color: isDark ? '#e5e7eb' : '#374151',
+                fontSize: 12,
               }}
             />
-            <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+            <Bar
+              dataKey="value"
+              radius={[8, 8, 0, 0]}
+              fillOpacity={isDark ? 0.9 : 1}
+              activeBar={{ fillOpacity: 1 }}  // only bar itself changes on hover
+            >
               {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>
           </BarChart>
