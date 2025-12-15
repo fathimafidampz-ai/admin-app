@@ -185,48 +185,66 @@ export function AdvancedFilterBuilder() {
       </Card>
 
       {/* Saved Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Saved Filters</CardTitle>
-          <CardDescription>Quick access to your saved filter presets</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {savedFilters.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">No saved filters yet</p>
-          ) : (
-            <div className="space-y-2">
-              {savedFilters.map((filter) => (
-                <div
-                  key={filter.id}
-                  className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{filter.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {filter.rules.length} rule{filter.rules.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => loadFilter(filter)}
-                    >
-                      Load
-                    </Button>
-                    <button
-                      onClick={() => deleteFilter(filter.id)}
-                      className="p-2 hover:bg-error-50 text-error-600 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+<Card>
+  <CardHeader>
+    <CardTitle>Saved Filters</CardTitle>
+    <CardDescription>Quick access to your saved filter presets</CardDescription>
+  </CardHeader>
+  <CardContent>
+    {savedFilters.length === 0 ? (
+      <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+        No saved filters yet
+      </p>
+    ) : (
+      <div className="space-y-2">
+        {savedFilters.map((filter) => (
+          <div
+            key={filter.id}
+            className="
+              flex items-center justify-between
+              p-3 rounded-lg border
+              bg-white border-gray-200
+              hover:bg-sky-100
+              dark:bg-slate-900 dark:border-slate-700
+              dark:hover:bg-sky-500/20
+              transition-colors
+            "
+          >
+            <div className="flex-1">
+              <p className="font-medium text-gray-900 dark:text-gray-100">
+                {filter.name}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {filter.rules.length} rule
+                {filter.rules.length !== 1 ? 's' : ''}
+              </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => loadFilter(filter)}
+              >
+                Load
+              </Button>
+              <button
+                onClick={() => deleteFilter(filter.id)}
+                className="
+                  p-2 rounded-lg transition-colors
+                  hover:bg-error-50 text-error-600
+                  dark:hover:bg-error-500/10 dark:text-error-400
+                "
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
+
     </div>
   );
 }

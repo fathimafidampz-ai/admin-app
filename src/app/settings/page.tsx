@@ -10,12 +10,12 @@ import {
   DataManagementSection,
   AboutSection,
 } from '@/components/settings';
-import { 
-  User, 
-  Palette, 
-  Settings as SettingsIcon, 
-  Database, 
-  Info 
+import {
+  User,
+  Palette,
+  Settings as SettingsIcon,
+  Database,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,10 +37,12 @@ export default function SettingsPage() {
       title="Settings"
       subtitle="Manage your account and preferences"
     >
-      <div className="flex gap-6">
+      {/* flex-col on mobile, row from md up */}
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0">
-          <div className="sticky top-6 space-y-1">
+        <div className="w-full md:w-64 md:flex-shrink-0">
+          {/* sticky only on md+ so it doesn’t eat space on small screens */}
+          <div className="md:sticky md:top-6 space-y-1">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -50,16 +52,20 @@ export default function SettingsPage() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left",
+                    'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-left',
                     isActive
-                      ? "bg-primary-100 text-primary-700 font-medium shadow-sm"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? 'bg-primary-100 text-primary-700 font-medium shadow-sm dark:bg-primary-500/15 dark:text-primary-100'
+                      : 'text-gray-700 hover:bg-sky-100 dark:text-gray-300 dark:hover:bg-sky-500/20'
                   )}
                 >
-                  <Icon className={cn(
-                    "w-5 h-5",
-                    isActive ? "text-primary-600" : "text-gray-500"
-                  )} />
+                  <Icon
+                    className={cn(
+                      'w-5 h-5',
+                      isActive
+                        ? 'text-primary-600 dark:text-primary-300'
+                        : 'text-gray-500 dark:text-gray-400'
+                    )}
+                  />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -68,7 +74,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 space-y-6 mt-4 md:mt-0">
           {activeTab === 'profile' && <ProfileSection />}
           {activeTab === 'appearance' && <AppearanceSection />}
           {activeTab === 'preferences' && <PreferencesSection />}

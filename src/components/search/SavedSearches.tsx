@@ -66,91 +66,131 @@ export function SavedSearches() {
     <div className="space-y-6">
       {/* Favorites */}
       {favorites.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Star className="w-5 h-5 text-warning-500" />
-              Favorite Searches
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {favorites.map((search) => (
-              <div
-                key={search.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <button
-                  onClick={() => loadSearch(search)}
-                  className="flex-1 text-left"
-                >
-                  <p className="font-medium text-gray-900">{search.name}</p>
-                  <p className="text-sm text-gray-500">"{search.query}"</p>
-                </button>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => toggleFavorite(search.id)}
-                    className="p-2 hover:bg-warning-50 rounded-lg transition-colors"
-                  >
-                    <Star className="w-4 h-4 text-warning-500 fill-warning-500" />
-                  </button>
-                  <button
-                    onClick={() => deleteSearch(search.id)}
-                    className="p-2 hover:bg-error-50 text-error-600 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <Star className="w-5 h-5 text-warning-500" />
+        Favorite Searches
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-2">
+      {favorites.map((search) => (
+        <div
+          key={search.id}
+          className="
+            flex items-center justify-between
+            p-3 rounded-lg border
+            bg-white border-gray-200
+            hover:bg-sky-100              /* light-mode hover */
+            dark:bg-slate-900 dark:border-slate-700
+            dark:hover:bg-sky-500/20      /* dark-mode hover */
+            transition-colors
+          "
+        >
+          <button
+            onClick={() => loadSearch(search)}
+            className="flex-1 text-left"
+          >
+            <p className="font-medium text-gray-900 dark:text-gray-100">
+              {search.name}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              "{search.query}"
+            </p>
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => toggleFavorite(search.id)}
+              className="
+                p-2 rounded-lg transition-colors
+                hover:bg-warning-50
+                dark:hover:bg-warning-500/10
+              "
+            >
+              <Star className="w-4 h-4 text-warning-500 fill-warning-500" />
+            </button>
+            <button
+              onClick={() => deleteSearch(search.id)}
+              className="
+                p-2 rounded-lg transition-colors
+                hover:bg-error-50 text-error-600
+                dark:hover:bg-error-500/10 dark:text-error-400
+              "
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </CardContent>
+  </Card>
+)}
+
 
       {/* Recent */}
       {recent.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-gray-500" />
-              Recent Searches
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {recent.map((search) => (
-              <div
-                key={search.id}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <button
-                  onClick={() => loadSearch(search)}
-                  className="flex-1 text-left"
-                >
-                  <p className="font-medium text-gray-900">{search.name}</p>
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>"{search.query}"</span>
-                    <span>•</span>
-                    <span>{search.createdAt}</span>
-                  </div>
-                </button>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => toggleFavorite(search.id)}
-                    className="p-2 hover:bg-warning-50 rounded-lg transition-colors"
-                  >
-                    <Star className="w-4 h-4 text-gray-400" />
-                  </button>
-                  <button
-                    onClick={() => deleteSearch(search.id)}
-                    className="p-2 hover:bg-error-50 text-error-600 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+  <Card>
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <Clock className="w-5 h-5 text-gray-500" />
+        Recent Searches
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-2">
+      {recent.map((search) => (
+        <div
+          key={search.id}
+          className="
+            flex items-center justify-between
+            p-3 rounded-lg border
+            bg-white border-gray-200
+            hover:bg-sky-100
+            dark:bg-slate-900 dark:border-slate-700
+            dark:hover:bg-sky-500/20
+            transition-colors
+          "
+        >
+          <button
+            onClick={() => loadSearch(search)}
+            className="flex-1 text-left"
+          >
+            <p className="font-medium text-gray-900 dark:text-gray-100">
+              {search.name}
+            </p>
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <span>"{search.query}"</span>
+              <span>•</span>
+              <span>{search.createdAt}</span>
+            </div>
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => toggleFavorite(search.id)}
+              className="
+                p-2 rounded-lg transition-colors
+                hover:bg-warning-50
+                dark:hover:bg-warning-500/10
+              "
+            >
+              <Star className="w-4 h-4 text-gray-400 dark:text-warning-400" />
+            </button>
+            <button
+              onClick={() => deleteSearch(search.id)}
+              className="
+                p-2 rounded-lg transition-colors
+                hover:bg-error-50 text-error-600
+                dark:hover:bg-error-500/10 dark:text-error-400
+              "
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ))}
+    </CardContent>
+  </Card>
+)}
+
     </div>
   );
 }
